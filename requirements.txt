@@ -1,0 +1,26 @@
+# Example requirements.txt file
+
+# Core libraries
+numpy
+pandas
+matplotlib
+
+# Machine learning libraries
+scikit-learn
+tensorflow
+torch
+
+# Web frameworks
+flask
+django
+
+# Database libraries
+sqlalchemy
+pymongo
+
+# Testing frameworks
+pytest
+
+# cv2
+opencv-python
+seaborn
