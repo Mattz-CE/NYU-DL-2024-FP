@@ -2,3 +2,7 @@ lung_colon_image_set/
 *.zip
 commit.sh
 **__pycache__/
+lung_colon_dataset/
+outputs/
+tmp/
+wandb/
