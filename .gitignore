@@ -3,6 +3,8 @@ lung_colon_image_set/
 commit.sh
 **__pycache__/
 lung_colon_dataset/
-outputs/
 tmp/
 wandb/
+
+**.safetensors
+**.bin

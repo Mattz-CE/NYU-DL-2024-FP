@@ -1,0 +1,39 @@
+{
+  "_name_or_path": "openai/clip-vit-base-patch16",
+  "architectures": [
+    "CLIPForImageClassification"
+  ],
+  "finetuning_task": "image-classification",
+  "id2label": {
+    "0": "colon_aca",
+    "1": "colon_n",
+    "2": "lung_aca",
+    "3": "lung_n",
+    "4": "lung_scc"
+  },
+  "initializer_factor": 1.0,
+  "label2id": {
+    "colon_aca": "0",
+    "colon_n": "1",
+    "lung_aca": "2",
+    "lung_n": "3",
+    "lung_scc": "4"
+  },
+  "logit_scale_init_value": 2.6592,
+  "model_type": "clip",
+  "problem_type": "single_label_classification",
+  "projection_dim": 512,
+  "text_config": {
+    "bos_token_id": 0,
+    "dropout": 0.0,
+    "eos_token_id": 2,
+    "model_type": "clip_text_model"
+  },
+  "torch_dtype": "float32",
+  "transformers_version": "4.41.0.dev0",
+  "vision_config": {
+    "dropout": 0.0,
+    "model_type": "clip_vision_model",
+    "patch_size": 16
+  }
+}
