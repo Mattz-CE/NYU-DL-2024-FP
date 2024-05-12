@@ -13,8 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 
+import functools
 import logging
 import os
+import os.path as osp
 import sys
 import warnings
 from dataclasses import dataclass, field
@@ -42,11 +44,13 @@ from transformers import (
     AutoConfig,
     AutoImageProcessor,
     AutoModelForImageClassification,
+
     HfArgumentParser,
     Trainer,
     TrainingArguments,
     set_seed,
 )
+from transformers import ViTForImageClassification, CLIPForImageClassification, BeitForImageClassification
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
@@ -64,6 +68,24 @@ require_version("datasets>=2.14.0", "To fix: pip install -r examples/pytorch/ima
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
+
+expname2cls_path={
+    'vit_base': (AutoModelForImageClassification, 'google/vit-base-patch16-224-in21k'),
+    'vit_large': (AutoModelForImageClassification, 'google/vit-large-patch16-224-in21k'),
+    'vit_huge': (AutoModelForImageClassification, 'google/vit-huge-patch14-224-in21k'),
+    'mae_base': (ViTForImageClassification, 'facebook/vit-mae-base'),
+    'mae_large': (ViTForImageClassification, 'facebook/vit-mae-large'),
+    'mae_huge': (ViTForImageClassification, 'facebook/vit-mae-huge'),
+    'clip_large': (CLIPForImageClassification, 'openai/clip-vit-large-patch14'),
+    'clip_base': (CLIPForImageClassification, 'openai/clip-vit-base-patch16'),    
+    'biomedclip_base': (ViTForImageClassification, 'ikim-uk-essen/BiomedCLIP_ViT_patch16_224'),    
+    'mim_base': (BeitForImageClassification, 'microsoft/beit-base-patch16-224'),    
+    'mim_large': (BeitForImageClassification, 'microsoft/beit-large-patch16-224'),
+}
+
+@functools.lru_cache(maxsize=None)
+def cache_file(filepath):
+    return open(filepath, 'a')
 
 def pil_loader(path: str):
     with open(path, "rb") as f:
@@ -133,10 +155,28 @@ class ModelArguments:
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
 
-    model_name_or_path: str = field(
+    experiment_name: str = field(
         default="google/vit-base-patch16-224-in21k",
         metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"},
     )
+    linear_prob: bool = field(
+        default=False,
+        metadata={"help": "Do linear prob"},
+
+    )
+
+
+    @property
+    def model_name_or_path(self):
+        if self.experiment_name in expname2cls_path:
+            return expname2cls_path[self.experiment_name][1]
+        else:
+            return self.experiment_name
+        
+    # model_name_or_path: str = field(
+    #     default="google/vit-base-patch16-224-in21k",
+    #     metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"},
+    # )
     model_type: Optional[str] = field(
         default=None,
         metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
@@ -208,12 +248,14 @@ def main():
     # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
     # information sent is the one passed as arguments along with your Python/PyTorch versions.
     send_example_telemetry("run_image_classification", model_args, data_args)
-
+    os.makedirs(training_args.output_dir, exist_ok=True)
     # Setup logging
+    # train_log_handler = logging.StreamHandler(cache_file(osp.join(training_args.output_dir, 'train.log')))
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
+                #   train_log_handler],
     )
 
     if training_args.should_log:
@@ -224,6 +266,7 @@ def main():
     logger.setLevel(log_level)
     transformers.utils.logging.set_verbosity(log_level)
     transformers.utils.logging.enable_default_handler()
+    # transformers.utils.logging.add_handler(train_log_handler)
     transformers.utils.logging.enable_explicit_format()
 
     # Log on each process the small summary:
@@ -237,7 +280,7 @@ def main():
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
-        if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
+        if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 1:
             raise ValueError(
                 f"Output directory ({training_args.output_dir}) already exists and is not empty. "
                 "Use --overwrite_output_dir to overcome."
@@ -325,16 +368,30 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-    model = AutoModelForImageClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        revision=model_args.model_revision,
-        token=model_args.token,
-        trust_remote_code=model_args.trust_remote_code,
-        ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
-    )
+    
+    if model_args.experiment_name in expname2cls_path:
+        model_cls, model_repo_id = expname2cls_path[model_args.experiment_name]
+        model = model_cls.from_pretrained(
+            model_repo_id,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+            revision=model_args.model_revision,
+            token=model_args.token,
+            trust_remote_code=model_args.trust_remote_code,
+            ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
+        )
+    elif model_args.experiment_name == 'scratch':
+        model = ViTForImageClassification(config)
+    else:
+        raise ValueError('')
+    
+    if model_args.linear_prob:
+        for pname, p in model.named_parameters():
+            if 'classifier' not in pname:
+                p.requires_grad = False
+
+    
     image_processor = AutoImageProcessor.from_pretrained(
         model_args.image_processor_name or model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
