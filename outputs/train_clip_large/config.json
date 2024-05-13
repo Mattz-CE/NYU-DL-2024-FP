@@ -1,0 +1,46 @@
+{
+  "_name_or_path": "openai/clip-vit-large-patch14",
+  "architectures": [
+    "CLIPForImageClassification"
+  ],
+  "finetuning_task": "image-classification",
+  "id2label": {
+    "0": "colon_aca",
+    "1": "colon_n",
+    "2": "lung_aca",
+    "3": "lung_n",
+    "4": "lung_scc"
+  },
+  "initializer_factor": 1.0,
+  "label2id": {
+    "colon_aca": "0",
+    "colon_n": "1",
+    "lung_aca": "2",
+    "lung_n": "3",
+    "lung_scc": "4"
+  },
+  "logit_scale_init_value": 2.6592,
+  "model_type": "clip",
+  "problem_type": "single_label_classification",
+  "projection_dim": 768,
+  "text_config": {
+    "dropout": 0.0,
+    "hidden_size": 768,
+    "intermediate_size": 3072,
+    "model_type": "clip_text_model",
+    "num_attention_heads": 12,
+    "projection_dim": 768
+  },
+  "torch_dtype": "float32",
+  "transformers_version": "4.41.0.dev0",
+  "vision_config": {
+    "dropout": 0.0,
+    "hidden_size": 1024,
+    "intermediate_size": 4096,
+    "model_type": "clip_vision_model",
+    "num_attention_heads": 16,
+    "num_hidden_layers": 24,
+    "patch_size": 14,
+    "projection_dim": 768
+  }
+}
