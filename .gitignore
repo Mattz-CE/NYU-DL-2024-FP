@@ -6,3 +6,4 @@ lung_colon_dataset/
 outputs/
 tmp/
 wandb/
+model.h5
