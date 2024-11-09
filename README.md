@@ -1,6 +1,4 @@
-# Tandon Final Project: Image classification on Medical Imaging
-This is the repo for Tandon 24 Spring Deep Learning.
-
+# Lung Colon Cancer classification on Medical Imaging utilizing ViT
 
 ## Install
 ```
