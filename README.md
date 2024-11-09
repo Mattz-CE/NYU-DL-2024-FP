@@ -1,4 +1,4 @@
-# Lung Colon Cancer classification on Medical Imaging utilizing ViT
+# Lung Colon Cancer classification utilizing ViT
 
 ## Install
 ```
