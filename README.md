@@ -1,4 +1,5 @@
 # Lung Colon Cancer classification utilizing ViT
+Lung Colon Cancer Classification using Vision Transformer (ViT) leverages the power of transformer-based models to distinguish between lung and colon cancer types with high accuracy. This repository includes preprocessing, model training, and evaluation scripts for implementing ViT on cancer histology images, enabling efficient, and scalable classification.
 
 ## Install
 ```
